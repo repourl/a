@@ -55,7 +55,7 @@ int main() {
         cout << "4. Exit\n";
         cout << "Enter choice: ";
         cin >> choice;
-
+                    // sort();
         if (choice == 1) {
             cout << "Enter number of elements: ";
             cin >> n;

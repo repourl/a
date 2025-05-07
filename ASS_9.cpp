@@ -115,6 +115,8 @@ void displayAscending(Node* root) {
     }
 }
 
+
+
 // Reverse in-order display (descending)
 void displayDescending(Node* root) {
     if (root) {

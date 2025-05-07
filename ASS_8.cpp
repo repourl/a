@@ -1,167 +1,126 @@
-#include<bits/stdc++.h>
+#include <iostream>
+#include <algorithm>
+#include <vector>
 using namespace std;
 
-class Node {
+class node{
 public:
-    int key;
-    Node* left;
-    Node* right;
-
-    Node(int k) : key(k), left(nullptr), right(nullptr) {}
+    node *left;
+    node *right;
+    int cost;
+    int value;
+    int root;
+    node(int c,int v,int r){
+        cost = c;
+        value = v;
+        root = r;
+        left = NULL;
+        right = NULL;
+    }
 };
 
-class OBST {
-private:
-    vector<int> keys;
-    vector<double> p, q;
-    int n;
-    Node* root;
-    double optCost;
+vector<vector<int>> c;
+vector<vector<int>> r;
+vector<vector<int>> w;
 
-    Node* createTree(vector<vector<int>>& r, int i, int j) {
-        if (i == j)
-            return nullptr;
-        int rootIdx = r[i][j];
-        Node* root = new Node(keys[rootIdx]);
-        root->left = createTree(r, i, rootIdx);
-        root->right = createTree(r, rootIdx + 1, j);
-        return root;
-    }
-
-    void printTree(Node* node, int space = 0, int spacing = 6) {
-        if (!node) return;
-        space += spacing;
-        printTree(node->right, space);
-        cout << setw(space) << node->key << endl;
-        printTree(node->left, space);
-    }
-
-    bool search(Node* node, int val) {
-        if (!node) return false;
-        if (node->key == val) return true;
-        return search(node->left, val) || search(node->right, val);
-    }
-
+class OBST{
 public:
-    OBST() : root(nullptr), optCost(0), n(0) {}
-
-    void inputData() {
-        cout << "Enter number of keys: ";
-        cin >> n;
-        keys.resize(n);
-        p.resize(n + 1);
-        q.resize(n + 1);
-
-        cout << "Enter keys: ";
-        for (int i = 0; i < n; i++)
-            cin >> keys[i];
-
-        cout << "Enter successful search probabilities (p1 to pn): ";
-        for (int i = 1; i <= n; i++)
-            cin >> p[i];
-
-        cout << "Enter unsuccessful search probabilities (q0 to qn): ";
-        for (int i = 0; i <= n; i++)
-            cin >> q[i];
-
-        cout << "Data stored successfully!\n";
+    
+    node* root;
+    OBST(){
+        root = NULL;
     }
 
-    void buildOptimalBST() {
-        vector<vector<double>> w(n + 1, vector<double>(n + 1, 0));
-        vector<vector<double>> c(n + 1, vector<double>(n + 1, 0));
-        vector<vector<int>> r(n + 1, vector<int>(n + 1, 0));
+    int weight(int i, int j,vector<int> &p,vector<int> &q,vector<vector<int>> &w){
+        if(w[i][j] != -1){
+            return w[i][j];
+        }
+        if(i == j){
+            w[i][j] = q[j];
+            return w[i][j];
+        }
+        w[i][j]  = weight(i,j-1,p,q,w) + p[j] + q[j];
+        return w[i][j];
+    }
 
-        for (int i = 0; i <= n; i++) {
-            w[i][i] = q[i];
-            c[i][i] = 0;
-            r[i][i] = 0;
+    int cost(int i, int j,vector<int> &p,vector<int> &q,vector<vector<int>> &c,vector<vector<int>> &r){
+        if(i == j){
+            c[i][j] = 0;
+            return 0;
+        }
+        if(c[i][j] != -1){
+            return c[i][j];
         }
 
-        for (int m = 1; m <= n; m++) {
-            for (int i = 0; i <= n - m; i++) {
-                int j = i + m;
-                w[i][j] = w[i][j - 1] + p[j] + q[j];
-
-                double minCost = DBL_MAX;
-                int bestRoot = -1;
-
-                for (int k = i; k < j; k++) {
-                    double cost = c[i][k] + c[k + 1][j] + w[i][j];
-                    if (cost < minCost) {
-                        minCost = cost;
-                        bestRoot = k;
-                    }
-                }
-
-                c[i][j] = minCost;
-                r[i][j] = bestRoot;
+        int m = 9999999;
+        int mr = -1;
+        for(int k = i+1;k<=j;k++){
+            int ti = cost(i,k-1,p,q,c,r);
+            int tk = cost(k,j,p,q,c,r);
+            int t = ti + tk;
+            if (t < m) {
+                m = t;
+                mr = k;
             }
         }
-
-        optCost = c[0][n];
-        root = createTree(r, 0, n);
-        cout << "Optimal BST built. Cost: " << optCost << endl;
+        r[i][j] = mr;
+        c[i][j] = m + weight(i,j,p,q,w);
+        return m + weight(i,j,p,q,w);
     }
 
-    void displayTree() {
-        if (!root) {
-            cout << "Error: Compute BST first!\n";
-            return;
-        }
-        cout << "Optimal BST Structure:\n";
-        printTree(root);
+    node* ins(int i,int j,vector<int> key,vector<int> &p,vector<int> &q){
+        if(i>=j) return NULL;
+        int ct = c[i][j];
+        int rt = r[i][j];
+        int v = key[rt-1];
+        node* temp = new node(ct,v,rt);
+        temp->left = ins(i, rt - 1, key, p, q);
+        temp->right = ins(rt, j, key, p, q);
+        
+        return temp;
     }
 
-    void searchKey(int val) {
-        if (!root) {
-            cout << "Error: Compute BST first!\n";
+    void tree(vector<int> &key,vector<int> &p,vector<int> &q){
+        int n = key.size();
+        
+        w = vector<vector<int>>(n + 1, vector<int>(n + 1, -1));
+        c = vector<vector<int>>(n + 1, vector<int>(n + 1, -1));
+        r = vector<vector<int>>(n + 1, vector<int>(n + 1, -1));
+
+        int wt = weight(0,n,p,q,w);
+        int ct = cost(0,n,p,q,c,r);
+        for(int i = 0;i<c.size();i++){
+            for(int j = 0;j<c[i].size();j++){
+                cout<<c[i][j]<<" ";
+            }
+            cout<<endl;
+        }
+        int rt = r[0][n];
+        cout<<"Cost is "<<ct<<" Root is "<<rt<<endl;
+        root = ins(0, n, key, p, q);
+    }
+    void inOrder(node* t){
+        if(!t){
             return;
         }
-        if (search(root, val))
-            cout << "Element found.\n";
-        else
-            cout << "Element not found.\n";
+        inOrder(t->left);
+        cout<<t->value<<" ";
+        inOrder(t->right);
     }
 };
 
-int main() {
+int main(){
+    vector<int> keys = {10,20, 30, 40};
+    vector<int> p = {0,3, 3, 1, 1};
+    vector<int> q = {2,3,1,1,1}; 
+
     OBST obst;
-    int choice;
+    obst.tree(keys, p, q);
 
-    while (true) {
-        cout << "\n----- OPTIMAL BINARY SEARCH TREE MENU -----\n";
-        cout << "1. Enter keys and probabilities\n";
-        cout << "2. Compute Optimal BST\n";
-        cout << "3. Print Optimal BST (Vertically)\n";
-        cout << "4. Search an element\n";
-        cout << "5. Exit\n";
-        cout << "Enter choice: ";
-        cin >> choice;
-
-        switch (choice) {
-        case 1:
-            obst.inputData();
-            break;
-        case 2:
-            obst.buildOptimalBST();
-            break;
-        case 3:
-            obst.displayTree();
-            break;
-        case 4:
-            int val;
-            cout << "Enter element to search: ";
-            cin >> val;
-            obst.searchKey(val);
-            break;
-        case 5:
-            cout << "Exiting...\n";
-            return 0;
-        default:
-            cout << "Invalid choice! Try again.\n";
-        }
-    }
+    cout << "Inorder Traversal of OBST: " << endl;
+    
+    obst.inOrder(obst.root);
+    cout<<endl;
 
     return 0;
 }

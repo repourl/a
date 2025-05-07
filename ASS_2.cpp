@@ -214,6 +214,7 @@ public:
             } else {
                 parent->rlink = child->rlink;
             }
+            
             delete child;
         } else {
 

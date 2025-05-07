@@ -2,9 +2,8 @@
 #include <fstream>
 using namespace std;
 
-using namespace std;
-
-class student{
+class student
+{
 public:
     int rollno;
     string name;
@@ -20,15 +19,18 @@ public:
         cout << "ADDRESS  : " << address << '\n';
     }
 
+    void getdata()
+    {
+        string tmp;
 
-    void getdata(){
-            string temp;
-            cout<<"ENter Name\n";
-            getline(cin,name);
-            cout<<"Enter Roll number\n";
-            getline(cin,temp);
-            rollno=stoi(temp);
-            cout << "ENTER DIVISION\n> ";
+        cout << "ENTER NAME\n> ";
+        getline(cin, name);
+
+        cout << "ENTER ROLL NO\n> ";
+        getline(cin, tmp);
+        rollno = stoi(tmp);
+
+        cout << "ENTER DIVISION\n> ";
         getline(cin, division);
 
         cout << "ENTER ADDRESS\n> ";
@@ -40,25 +42,25 @@ class Myfile
 {
     fstream file;
     student s;
-    public:
-    void addrecord(){
-        file.open("data.txt",ios::app |ios::binary);
-        if(!file){
+
+public:
+    void addrecord()
+    {
+        file.open("data.txt", ios::app | ios::binary);
+        if (!file)
+        {
             cerr << "Error opening file for append\n";
             return;
         }
-
         s.getdata();
-        file.write((char* ) (&s),sizeof(s));
+        file.write((char *)(&s), sizeof(s));
         cout << "ADDED:\n";
         s.show();
         file.close();
-
     }
 
     void showfile()
     {
-
         file.open("data.txt", ios::in | ios::binary);
         if (!file)
         {
@@ -66,47 +68,49 @@ class Myfile
             return;
         }
 
-        while(file.read((char*) &s,sizeof(s))){
-            s.show();
 
+
+        cout << "\n=== ALL RECORDS ===\n";
+        while (file.read((char *)(&s), sizeof(s)))
+        {
+            s.show();
         }
         file.close();
-
     }
 
     void remove1()
     {
-        // int roll;
-        // cout<<"Ente roll"<<endl;
-        // cin>>roll;
-        // cin.ignore(numeric_limits<streamsize>:: max(),'\n');
-            int roll;
-            string r;
-            cout<<"Enter roll number\n";
-            getline(cin,r);
-            roll=stoi(r);
-            file.open("data.txt", ios::in | ios::binary);
+        int roll;
+        cout << "ENTER ROLL NO TO DELETE:\n> ";
+        cin >> roll;
+        cin.ignore(numeric_limits<streamsize>::max(), '\n'); // flush before next getline
 
-            fstream temp("temp.txt",ios::out|ios::binary);
-            if (!file || !temp)
+        file.open("data.txt", ios::in | ios::binary);
+        fstream temp("temp.txt", ios::out | ios::binary);
+        if (!file || !temp)
+        {
+            cerr << "File error\n";
+            return;
+        }
+
+        bool found = false;
+        while (file.read((char *)(&s), sizeof(s)))
+        {
+
+            if (s.rollno == roll)
             {
-                cerr << "File error\n";
-                return;
+                found = true;
+                cout << "RECORD DELETED:\n";
+                s.show();
             }
-    
-            bool found = false;
-
-            while(file.read((char *)(&s), sizeof(s))){
-
-                if(s.rollno!=roll){
-                    temp.write((char*) (& s), sizeof(s));
-                }else{
-                    found = true;
-                    cout << "RECORD DELETED:\n";
-                    s.show();
-                }
+            
+            else
+            {
+                temp.write((char *)(&s), sizeof(s));
             }
-            file.close();
+        }
+
+        file.close();
         temp.close();
         remove("data.txt");
         rename("temp.txt", "data.txt");
@@ -146,14 +150,44 @@ class Myfile
 
         file.close();
     }
-
-
 };
 
-int main(){
+int main()
+{
+    Myfile m;
+    int choice;
+    do
+    {
+        cout << "\n1. Add Record\n"
+             << "2. Show All Records\n"
+             << "3. Delete Record\n"
+             << "4. Display One Record\n"
+             << "5. Exit\n"
+             << "Enter your choice: ";
+        cin >> choice;
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
 
-
+        switch (choice)
+        {
+        case 1:
+            m.addrecord();
+            break;
+        case 2:
+            m.showfile();
+            break;
+        case 3:
+            m.remove1();
+            break;
+        case 4:
+            m.displayOne();
+            break;
+        case 5:
+            cout << "Exiting...\n";
+            break;
+        default:
+            cout << "Invalid choice\n";
+        }
+    } while (choice != 5);
 
     return 0;
-
 }
